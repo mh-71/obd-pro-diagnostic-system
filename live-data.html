@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live Data | OBD PRO</title><link rel="stylesheet" href="style.css"><script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body><div class="app-shell">
+<aside class="sidebar">
+<a class="brand" href="index.html"><span class="brand-mark"><i data-lucide="cpu"></i></span><span><strong>OBD PRO</strong><small>DIAGNOSTIC DASHBOARD</small></span></a>
+<nav class="nav-list" aria-label="Main navigation">
+<a class="nav-item" href="index.html"><i data-lucide="gauge"></i>Dashboard</a>
+<a class="nav-item active" href="live-data.html"><i data-lucide="chart-no-axes-combined"></i>Live Data</a>
+<a class="nav-item" href="dtc.html"><i data-lucide="triangle-alert"></i>Fault Codes (DTC)</a>
+<a class="nav-item" href="freeze-frame.html"><i data-lucide="calendar-clock"></i>Freeze Frame</a>
+<a class="nav-item" href="readiness.html"><i data-lucide="check-check"></i>I/M Readiness</a>
+<a class="nav-item" href="vehicle-info.html"><i data-lucide="car-front"></i>Vehicle Info</a>
+<a class="nav-item" href="settings.html"><i data-lucide="settings"></i>Settings</a>
+</nav>
+<div class="device-card"><div class="device-title"><span class="status-dot" id="sideDot"></span><span id="sideConnection">Waiting for ESP32</span></div><div class="device-line"><span>Device</span><b>ESP32 OBD Scanner</b></div><div class="device-line"><span>API</span><b id="apiAddressLabel">192.168.4.1</b></div><div class="device-line"><span>Update</span><b id="lastUpdate">—</b></div></div>
+<div class="sidebar-footer">Real OBD data appears only when compatible hardware and vehicle are connected.</div>
+</aside>
+<main class="main-content">
+<header class="topbar"><div class="page-heading"><span class="eyebrow">WORKSHOP DIAGNOSTICS</span><h1>Live Data</h1><p>Live sensor values received from the ESP32 OBD-II adapter.</p></div>
+<div class="topbar-actions"><div class="connection-pill"><span class="status-dot" id="connectionDot"></span><span><b id="connectionLabel">Not connected</b><small id="connectionSub">API: 192.168.4.1</small></span></div><button class="btn btn-outline" id="connectBtn"><i data-lucide="plug-zap"></i> Test connection</button></div></header>
+
+<section class="panel" style="margin-bottom:13px">
+<div class="panel-heading"><div><span class="section-icon"><i data-lucide="wifi"></i></span><div><h2>ESP32 connection</h2><p>Connect your computer to the scanner's Wi-Fi before testing.</p></div></div><span class="live-badge" id="modeBadge"><span></span> WAITING</span></div>
+<div class="field-grid">
+<label class="field">ESP32 API base URL<input id="apiBase" value="http://192.168.4.1" spellcheck="false" autocomplete="off"></label>
+<label class="field">Refresh interval<select id="pollInterval"><option value="1000">1 second</option><option value="2000" selected>2 seconds</option><option value="5000">5 seconds</option></select></label>
+</div>
+<div class="button-row" style="max-width:390px;margin-top:12px"><button class="btn btn-primary" id="startBtn"><i data-lucide="play"></i> Start live polling</button><button class="btn btn-danger" id="stopBtn"><i data-lucide="pause"></i> Stop</button></div>
+<p class="panel-note" id="connectionMessage">Not connected yet. This page will request GET /api/obd from the ESP32. Demo values are not shown as live values.</p>
+</section>
+
+<section class="metrics-grid">
+<article class="metric-card green"><div class="metric-top"><span>Engine RPM</span><i data-lucide="activity"></i></div><strong id="rpmMetric">—</strong><small>RPM <span class="muted" id="rpmSource">Waiting for ECU</span></small><div class="sparkline"><svg viewBox="0 0 160 28" preserveAspectRatio="none"><polyline id="rpmSpark" points="0,20 160,20"/></svg></div></article>
+<article class="metric-card red"><div class="metric-top"><span>Coolant Temp</span><i data-lucide="thermometer"></i></div><strong id="tempMetric">—</strong><small>°C <span class="muted">Engine coolant</span></small><div class="sparkline"><svg viewBox="0 0 160 28" preserveAspectRatio="none"><polyline id="tempSpark" points="0,20 160,20"/></svg></div></article>
+<article class="metric-card blue"><div class="metric-top"><span>Vehicle Speed</span><i data-lucide="car-front"></i></div><strong id="speedMetric">—</strong><small>km/h <span class="muted">Vehicle speed</span></small><div class="sparkline"><svg viewBox="0 0 160 28" preserveAspectRatio="none"><polyline id="speedSpark" points="0,20 160,20"/></svg></div></article>
+<article class="metric-card orange"><div class="metric-top"><span>Engine Load</span><i data-lucide="zap"></i></div><strong id="loadMetric">—</strong><small>% <span class="muted">Calculated load</span></small><div class="sparkline"><svg viewBox="0 0 160 28" preserveAspectRatio="none"><polyline id="loadSpark" points="0,20 160,20"/></svg></div></article>
+</section>
+
+<section class="page-grid">
+<article class="panel wide"><div class="panel-heading"><div><span class="section-icon green-icon"><i data-lucide="chart-no-axes-combined"></i></span><div><h2>Live Data Monitor</h2><p>Charts update from ESP32 API responses.</p></div></div><span class="pill warning" id="dataBadge">NO DATA</span></div>
+<div class="charts-grid"><div class="panel chart-panel"><div class="panel-heading"><h2>Engine RPM</h2><strong class="chart-value green-text" id="rpmChartValue">— RPM</strong></div><canvas id="rpmChart"></canvas></div><div class="panel chart-panel"><div class="panel-heading"><h2>Coolant Temperature</h2><strong class="chart-value red-text" id="tempChartValue">— °C</strong></div><canvas id="tempChart"></canvas></div></div></article>
+<article class="panel wide"><div class="panel-heading"><div><span class="section-icon"><i data-lucide="list-filter"></i></span><div><h2>Sensor PID Table</h2><p>PID values and source status from the scanner.</p></div></div><button class="btn btn-outline" id="exportBtn"><i data-lucide="download"></i> Export CSV</button></div>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Mode / PID</th><th>Value</th><th>Unit</th><th>Status</th></tr></thead><tbody>
+<tr><td>Engine RPM</td><td>01 0C</td><td id="tblRpm">—</td><td>RPM</td><td id="stRpm"><span class="pill warning">Waiting</span></td></tr>
+<tr><td>Vehicle Speed</td><td>01 0D</td><td id="tblSpeed">—</td><td>km/h</td><td id="stSpeed"><span class="pill warning">Waiting</span></td></tr>
+<tr><td>Coolant Temperature</td><td>01 05</td><td id="tblTemp">—</td><td>°C</td><td id="stTemp"><span class="pill warning">Waiting</span></td></tr>
+<tr><td>Calculated Engine Load</td><td>01 04</td><td id="tblLoad">—</td><td>%</td><td id="stLoad"><span class="pill warning">Waiting</span></td></tr>
+<tr><td>Throttle Position</td><td>01 11</td><td id="tblThrottle">—</td><td>%</td><td id="stThrottle"><span class="pill warning">Waiting</span></td></tr>
+<tr><td>Intake Manifold Pressure</td><td>01 0B</td><td id="tblMap">—</td><td>kPa</td><td id="stMap"><span class="pill warning">Waiting</span></td></tr>
+<tr><td>Intake Air Temperature</td><td>01 0F</td><td id="tblIat">—</td><td>°C</td><td id="stIat"><span class="pill warning">Waiting</span></td></tr>
+<tr><td>MAF Air Flow</td><td>01 10</td><td id="tblMaf">—</td><td>g/s</td><td id="stMaf"><span class="pill warning">Waiting</span></td></tr>
+</tbody></table></div></article>
+</section>
+<footer class="main-footer"><span>OBD PRO · Live Data module</span><span><span class="status-dot" id="footerDot"></span> <span id="footerStatus">Waiting for ESP32</span></span></footer>
+</main></div><div id="toast" class="toast" role="status" aria-live="polite"></div><script src="app.js"></script><script src="live-data.js"></script></body></html>
